@@ -141,7 +141,7 @@ class Cachy {
             //filter
             let imageFiles = directoryContents.filter{ $0.absoluteString.contains(kCachyFilePrefix) }
             createLocalCachyArray(myUrls: imageFiles)
-        } catch let error as NSError {
+        } catch _ as NSError {
             //print(error.localizedDescription)
         }
     }
