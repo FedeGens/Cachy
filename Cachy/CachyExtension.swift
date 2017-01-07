@@ -35,7 +35,7 @@ extension UIImageView {
         })
     }
     
-    func cachyImageFrom(link: String, withHandler handler: @escaping (_ success: Bool) -> ()) {
+    public func cachyImageFrom(link: String, withHandler handler: @escaping (_ success: Bool) -> ()) {
         DispatchQueue.global().async {
             if Cachy.getFirstTime() {
                 Cachy.refreshDirectory()
@@ -60,7 +60,7 @@ extension UIImageView {
         }
     }
     
-    func cachyImageFrom(link: String) {
+    public func cachyImageFrom(link: String) {
         cachyImageFrom(link: link, withHandler: {_ in})
     }
     
