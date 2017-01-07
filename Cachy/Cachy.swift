@@ -73,7 +73,7 @@ class Cachy {
         do {
             try FileManager.default.createDirectory(atPath: dataPath.path, withIntermediateDirectories: true, attributes: nil)
         } catch let error as NSError {
-            print(error.localizedDescription)
+            fatalError(error.localizedDescription)
         }
     }
     
@@ -106,7 +106,7 @@ class Cachy {
             cachyImageDataArray[index].timestamp = timestamp
             return UIImage(contentsOfFile: getCachyDirectory().appendingPathComponent(cachyImageDataArray[index].getFilename()).path)!
         } catch {
-            print(error)
+            //print(error)
             return getImageFromDirectoryWithName(name: data.imageName)
         }
     }
@@ -118,7 +118,7 @@ class Cachy {
                 return UIImage(contentsOfFile: imageUrl.path)!
             }
         } catch {
-            print(error)
+            //print(error)
         }
         return UIImage()
     }
@@ -142,7 +142,7 @@ class Cachy {
             let imageFiles = directoryContents.filter{ $0.absoluteString.contains(kCachyFilePrefix) }
             createLocalCachyArray(myUrls: imageFiles)
         } catch let error as NSError {
-            print(error.localizedDescription)
+            //print(error.localizedDescription)
         }
     }
     
@@ -176,7 +176,7 @@ class Cachy {
                     addElemToCachyArray(timestamp: timestamp, name: myName)
                     checkCachySize()
                 } catch {
-                    print("error")
+                    //print("error")
                 }
             }
         }
@@ -211,8 +211,8 @@ class Cachy {
             
             let index = cachyImageDataArray.index(where: {$0.imageName == data.imageName})!
             cachyImageDataArray.remove(at: index)
-        } catch let error as NSError {
-            print(error.debugDescription)
+        } catch _ as NSError {
+            //print(error.debugDescription)
         }
     }
     
@@ -224,7 +224,7 @@ class Cachy {
             try fileManager.removeItem(at: path)
             checkMainDirectory()
         } catch {
-            print(error)
+            //print(error)
         }
     }
     

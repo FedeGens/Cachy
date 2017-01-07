@@ -36,7 +36,8 @@ extension UIImageView {
     }
     
     public func cachyImageFrom(link: String, withHandler handler: @escaping (_ success: Bool) -> ()) {
-        DispatchQueue.global().async {
+        let serialQueue = DispatchQueue(label: "cachyQueue")
+        serialQueue.async {
             if Cachy.getFirstTime() {
                 Cachy.refreshDirectory()
             }
