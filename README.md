@@ -29,7 +29,6 @@ There's an extension with a completion handler too, if you need it:
 ```Swift
 let yourImageView = UIImageView()
 yourImageView.cachyImageFrom(link: YOUR_IMAGE_LINK_HERE, withHandler: { (success) in
-
 }
 ```
 
