@@ -15,6 +15,7 @@ class Cachy {
     private static let kCachyFolderName = "ImgCachy"
     private static var cachyImageDataArray = [CachyImageData]()
     private static var isFirstTime = true
+    private static let imageCache = NSCache<NSString, UIImage>()
     
     //MARK: internal methods
     //Cachy setup
@@ -51,7 +52,9 @@ class Cachy {
         guard let elem = cachyImageDataArray.filter({$0.imageName == myLink}).first else {
             return nil
         }
-        return getImageFromDirectory(data: elem)
+        let cachedImage = checkCache(link: myLink)
+        
+        return (cachedImage != nil) ? cachedImage : getImageFromDirectory(data: elem)
     }
     
     //save cachy image
@@ -59,6 +62,13 @@ class Cachy {
         saveImageToDirectory(image: image, name: name)
     }
     
+    //MARK: - Check Cache
+    private static func checkCache(link: String) -> UIImage? {
+        if let cacheImage = imageCache.object(forKey: link as NSString) as UIImage?{
+            return cacheImage
+        }
+        return nil
+    }
     
     //MARK: Check main directory
     private static func checkMainDirectory() {
@@ -91,7 +101,9 @@ class Cachy {
     //get image from directory and update timestamp
     private static func getImageFromDirectory(data: CachyImageData) -> UIImage {
         if Int(CFAbsoluteTimeGetCurrent()) - Int(data.timestamp)! < 10 {
-            return UIImage(contentsOfFile: getCachyDirectory().appendingPathComponent(data.getFilename()).path)!
+            let image = UIImage(contentsOfFile: getCachyDirectory().appendingPathComponent(data.getFilename()).path)!
+            self.imageCache.setObject(image, forKey: data.imageName as NSString)
+            return image
         }
         do {
             let path = getCachyDirectory()
@@ -104,10 +116,14 @@ class Cachy {
             //update timestamp
             let index = cachyImageDataArray.index(where: {$0.imageName == data.imageName})!
             cachyImageDataArray[index].timestamp = timestamp
-            return UIImage(contentsOfFile: getCachyDirectory().appendingPathComponent(cachyImageDataArray[index].getFilename()).path)!
+            let image = UIImage(contentsOfFile: getCachyDirectory().appendingPathComponent(cachyImageDataArray[index].getFilename()).path)!
+            self.imageCache.setObject(image, forKey: data.imageName as NSString)
+            return image
         } catch {
             //print(error)
-            return getImageFromDirectoryWithName(name: data.imageName)
+            let image = getImageFromDirectoryWithName(name: data.imageName)
+            self.imageCache.setObject(image, forKey: data.imageName as NSString)
+            return image
         }
     }
     
@@ -141,7 +157,7 @@ class Cachy {
             //filter
             let imageFiles = directoryContents.filter{ $0.absoluteString.contains(kCachyFilePrefix) }
             createLocalCachyArray(myUrls: imageFiles)
-        } catch _ as NSError {
+        } catch let error as NSError {
             //print(error.localizedDescription)
         }
     }
