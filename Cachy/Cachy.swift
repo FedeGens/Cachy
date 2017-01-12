@@ -8,7 +8,7 @@
 
 import UIKit
 
-class Cachy {
+public class Cachy {
     private static var kMaxTime = 86400
     private static var kMaxImagesToSave = 100
     private static let kCachyFilePrefix = "ImgCachyPrefix"
@@ -19,25 +19,25 @@ class Cachy {
     
     //MARK: internal methods
     //Cachy setup
-    static func setExpireTime(seconds: Int) {
+    public static func setExpireTime(seconds: Int) {
         kMaxTime = seconds
     }
     
-    static func setMaxImages(number: Int) {
+    public static func setMaxImages(number: Int) {
         kMaxImagesToSave = number
     }
     
     //clean all
-    static func purge() {
+    public static func purge() {
         removeAll()
     }
     
-    static func getFirstTime() -> Bool {
+    public static func getFirstTime() -> Bool {
         return Cachy.isFirstTime
     }
     
     //called first time
-    static func refreshDirectory() {
+    internal static func refreshDirectory() {
         isFirstTime = false
         checkMainDirectory()
         getImagesReferencesFromDirectory()
@@ -46,7 +46,7 @@ class Cachy {
     
     
     //check if image exists
-    static func getCachyImage(link: String) -> UIImage? {
+    internal static func getCachyImage(link: String) -> UIImage? {
         let myLink = link.replacingOccurrences(of: "/", with: "--").replacingOccurrences(of: "_", with: "--").addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!
         
         guard let elem = cachyImageDataArray.filter({$0.imageName == myLink}).first else {
@@ -58,7 +58,7 @@ class Cachy {
     }
     
     //save cachy image
-    static func saveImage(image: UIImage, name: String) {
+    internal static func saveImage(image: UIImage, name: String) {
         saveImageToDirectory(image: image, name: name)
     }
     
@@ -280,5 +280,62 @@ class Cachy {
             return (Int(CFAbsoluteTimeGetCurrent()) - Int(timestamp)!) < kMaxTime
         }
     }
+    
+    
+    //MARK: Download images
+    //download image from url
+    internal static func downloadedFrom(url: URL, completion: @escaping (_ success: Bool, _ image: UIImage) -> () ) {
+        URLSession.shared.dataTask(with: url) { (data, response, error) in
+            guard
+                let httpURLResponse = response as? HTTPURLResponse, httpURLResponse.statusCode == 200,
+                let mimeType = response?.mimeType, mimeType.hasPrefix("image"),
+                let data = data, error == nil,
+                let image = UIImage(data: data)
+                else { return }
+            completion(true, image)
+            
+            }.resume()
+    }
+    
+    //download image from string
+    internal static func downloadedFrom(link: String, completion: @escaping (_ success: Bool, _ image: UIImage) -> () ) {
+        guard let url = URL(string: link) else { return }
+        downloadedFrom(url: url, completion: {
+            (success, image) in
+            if success {
+                completion(true, image)
+            }
+        })
+    }
+    
+    
+    //MARK: Get UIImage
+    public static func cachyImageFrom(link: String, withHandler handler: @escaping (_ success: Bool, _ image: UIImage?) -> ()) {
+        let serialQueue = DispatchQueue(label: "cachyGetUIImageQueue")
+        serialQueue.async {
+            if self.getFirstTime() {
+                self.refreshDirectory()
+            }
+            
+            if let image = self.getCachyImage(link: link) {
+                DispatchQueue.main.async {
+                    handler(true, image)
+                }
+            } else {
+                self.downloadedFrom(link: link, completion: { (success, image) in
+                    if success {
+                        self.saveImage(image: image, name: link)
+                        DispatchQueue.main.async {
+                            handler(true, image)
+                        }
+                    }
+                    DispatchQueue.main.async {
+                        handler(false, nil)
+                    }
+                })
+            }
+        }
+    }
+    
 }
 
