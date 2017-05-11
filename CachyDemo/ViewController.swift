@@ -16,7 +16,7 @@ class ViewController: UIViewController {
         // Do any additional setup after loading the view, typically from a nib.
         imageView_.contentMode = .scaleAspectFill
         imageView_.clipsToBounds = true
-        imageView_.cachyImageFrom(link: "http://www.w3schools.com/css/trolltunga.jpg")
+        imageView_.cachyImageFrom(link: "myWrongLink", withPlaceholder: UIImage(named: "gattino"))
     }
 
     override func didReceiveMemoryWarning() {

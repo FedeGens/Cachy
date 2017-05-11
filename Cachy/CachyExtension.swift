@@ -10,7 +10,7 @@ import UIKit
 
 extension UIImageView {
     
-    public func cachyImageFrom(link: String, withHandler handler: @escaping (_ success: Bool) -> ()) {
+    public func cachyImageFrom(link: String, withPlaceholder placeholder: UIImage?, withHandler handler: @escaping (_ success: Bool) -> ()) {
         let serialQueue = DispatchQueue(label: "cachyQueue")
         serialQueue.async {
             if Cachy.getFirstTime() {
@@ -25,13 +25,14 @@ extension UIImageView {
             } else {
                 Cachy.downloadedFrom(link: link, completion: { (success, image) in
                     if success {
-                        Cachy.saveImage(image: image, name: link)
+                        Cachy.saveImage(image: image!, name: link)
                         DispatchQueue.main.async() { () -> Void in
                             self.image = image
                             handler(true)
                         }
                     }
                     DispatchQueue.main.async() { () -> Void in
+                        self.image = placeholder
                         handler(false)
                     }
                 })
@@ -40,7 +41,11 @@ extension UIImageView {
     }
     
     public func cachyImageFrom(link: String) {
-        cachyImageFrom(link: link, withHandler: {_ in})
+        cachyImageFrom(link: link, withPlaceholder: nil ,withHandler: {_ in})
+    }
+    
+    public func cachyImageFrom(link: String, withPlaceholder placeholder: UIImage?) {
+        cachyImageFrom(link: link, withPlaceholder: placeholder, withHandler: {_ in})
     }
     
 }

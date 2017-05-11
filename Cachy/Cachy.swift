@@ -284,26 +284,31 @@ public class Cachy {
     
     //MARK: Download images
     //download image from url
-    internal static func downloadedFrom(url: URL, completion: @escaping (_ success: Bool, _ image: UIImage) -> () ) {
+    internal static func downloadedFrom(url: URL, completion: @escaping (_ success: Bool, _ image: UIImage?) -> () ) {
         URLSession.shared.dataTask(with: url) { (data, response, error) in
             guard
                 let httpURLResponse = response as? HTTPURLResponse, httpURLResponse.statusCode == 200,
                 let mimeType = response?.mimeType, mimeType.hasPrefix("image"),
                 let data = data, error == nil,
                 let image = UIImage(data: data)
-                else { return }
+                else {
+                    completion(false, nil)
+                    return
+            }
             completion(true, image)
             
             }.resume()
     }
     
     //download image from string
-    internal static func downloadedFrom(link: String, completion: @escaping (_ success: Bool, _ image: UIImage) -> () ) {
+    internal static func downloadedFrom(link: String, completion: @escaping (_ success: Bool, _ image: UIImage?) -> () ) {
         guard let url = URL(string: link) else { return }
         downloadedFrom(url: url, completion: {
             (success, image) in
             if success {
                 completion(true, image)
+            } else {
+                completion(false, nil)
             }
         })
     }
@@ -324,7 +329,7 @@ public class Cachy {
             } else {
                 self.downloadedFrom(link: link, completion: { (success, image) in
                     if success {
-                        self.saveImage(image: image, name: link)
+                        self.saveImage(image: image!, name: link)
                         DispatchQueue.main.async {
                             handler(true, image)
                         }
