@@ -30,6 +30,7 @@ extension UIImageView {
                             self.image = image
                             handler(true)
                         }
+                        return
                     }
                     DispatchQueue.main.async() { () -> Void in
                         self.image = placeholder
