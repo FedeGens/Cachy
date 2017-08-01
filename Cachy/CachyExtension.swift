@@ -10,7 +10,18 @@ import UIKit
 
 extension UIImageView {
     
-    public func cachyImageFrom(link: String, withPlaceholder placeholder: UIImage?, withHandler handler: @escaping (_ success: Bool) -> ()) {
+    public func cachyImageFrom(link: String, withPlaceholder placeholder: UIImage? = nil, indicatorVisible: Bool = true, withHandler handler: ((_ success: Bool) -> ())? = nil) {
+        let indicator = UIActivityIndicatorView()
+        
+        //indicator
+        if indicatorVisible {
+            indicator.center = CGPoint.init(x: self.frame.width/2, y: self.frame.height/2)
+            indicator.activityIndicatorViewStyle = .whiteLarge
+            indicator.startAnimating()
+            self.addSubview(indicator)
+        }
+        
+        //queue
         let serialQueue = DispatchQueue(label: "cachyQueue")
         serialQueue.async {
             if Cachy.getFirstTime() {
@@ -20,7 +31,8 @@ extension UIImageView {
             if let image = Cachy.getCachyImage(link: link) {
                 DispatchQueue.main.async() { () -> Void in
                     self.image = image
-                    handler(true)
+                    handler?(true)
+                    indicator.removeFromSuperview()
                 }
             } else {
                 Cachy.downloadedFrom(link: link, completion: { (success, image) in
@@ -28,25 +40,18 @@ extension UIImageView {
                         Cachy.saveImage(image: image!, name: link)
                         DispatchQueue.main.async() { () -> Void in
                             self.image = image
-                            handler(true)
+                            handler?(true)
+                            indicator.removeFromSuperview()
                         }
                         return
                     }
                     DispatchQueue.main.async() { () -> Void in
                         self.image = placeholder
-                        handler(false)
+                        handler?(false)
+                        indicator.removeFromSuperview()
                     }
                 })
             }
         }
     }
-    
-    public func cachyImageFrom(link: String) {
-        cachyImageFrom(link: link, withPlaceholder: nil ,withHandler: {_ in})
-    }
-    
-    public func cachyImageFrom(link: String, withPlaceholder placeholder: UIImage?) {
-        cachyImageFrom(link: link, withPlaceholder: placeholder, withHandler: {_ in})
-    }
-    
 }
