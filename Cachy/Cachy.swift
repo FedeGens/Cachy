@@ -37,7 +37,7 @@ public class Cachy {
     }
     
     //called first time
-    internal static func refreshDirectory() {
+    public static func refreshDirectory() {
         isFirstTime = false
         checkMainDirectory()
         getImagesReferencesFromDirectory()

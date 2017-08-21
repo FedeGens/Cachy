@@ -65,18 +65,7 @@ extension UIImageView {
             return
         }
         
-        //indicator
         let indicator = UIActivityIndicatorView()
-        if indicatorVisible {
-            indicator.center = CGPoint.init(x: self.frame.width/2, y: self.frame.height/2)
-            indicator.activityIndicatorViewStyle = .whiteLarge
-            indicator.startAnimating()
-            self.addSubview(indicator)
-        }
-        
-        if Cachy.getFirstTime() {
-            Cachy.refreshDirectory()
-        }
         
         //get from directory
         if let image = Cachy.getCachyImage(link: link) {
@@ -85,14 +74,22 @@ extension UIImageView {
             }
             self.image = image
             handler?(true)
-            indicator.removeFromSuperview()
             return
         }
         
         //queue
         let serialQueue = DispatchQueue(label: "cachyQueue")
         serialQueue.async {
-            self.image = placeholder ?? self.image
+            //indicator
+            DispatchQueue.main.async() { () -> Void in
+                if indicatorVisible {
+                    indicator.center = CGPoint.init(x: self.frame.width/2, y: self.frame.height/2)
+                    indicator.activityIndicatorViewStyle = .whiteLarge
+                    indicator.startAnimating()
+                    self.addSubview(indicator)
+                }
+                self.image = placeholder ?? self.image
+            }
             Cachy.downloadedFrom(link: link, completion: { (success, image) in
                 if success {
                     guard self.properties.urlToSet == link else {
