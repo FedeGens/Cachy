@@ -56,30 +56,41 @@ extension UIImageView {
     
     //Cachy extension
     public func cachyImageFrom(link: String, withPlaceholder placeholder: UIImage? = nil, indicatorVisible: Bool = true, withHandler handler: ((_ success: Bool) -> ())? = nil) {
+        var indicator : UIActivityIndicatorView! = nil
         
-        properties.urlToSet = link
-        
-        //check valid image url
-        guard verifyUrl(urlString: link) else {
-            self.image = placeholder ?? self.image
-            return
-        }
-        
-        let indicator = UIActivityIndicatorView()
-        
-        //get from directory
-        if let image = Cachy.getCachyImage(link: link) {
-            guard self.properties.urlToSet == link else {
-                return
-            }
-            self.image = image
-            handler?(true)
-            return
+        DispatchQueue.main.async {
+            indicator = UIActivityIndicatorView()
         }
         
         //queue
         let serialQueue = DispatchQueue(label: "cachyQueue")
         serialQueue.async {
+            if Cachy.getFirstTime() {
+                Cachy.refreshDirectory()
+            }
+            
+            self.properties.urlToSet = link
+            
+            //check valid image url
+            guard self.verifyUrl(urlString: link) else {
+                DispatchQueue.main.async {
+                    self.image = placeholder ?? self.image
+                }
+                return
+            }
+            
+            //get from directory
+            if let image = Cachy.getCachyImage(link: link) {
+                guard self.properties.urlToSet == link else {
+                    return
+                }
+                DispatchQueue.main.async {
+                    self.image = image
+                }
+                handler?(true)
+                return
+            }
+            
             //indicator
             DispatchQueue.main.async() { () -> Void in
                 if indicatorVisible {
