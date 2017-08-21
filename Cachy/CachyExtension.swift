@@ -56,11 +56,12 @@ extension UIImageView {
     
     //Cachy extension
     public func cachyImageFrom(link: String, withPlaceholder placeholder: UIImage? = nil, indicatorVisible: Bool = true, withHandler handler: ((_ success: Bool) -> ())? = nil) {
+        
         properties.urlToSet = link
         
-        self.image = placeholder ?? self.image
         //check valid image url
         guard verifyUrl(urlString: link) else {
+            self.image = placeholder ?? self.image
             return
         }
         
@@ -73,43 +74,44 @@ extension UIImageView {
             self.addSubview(indicator)
         }
         
+        if Cachy.getFirstTime() {
+            Cachy.refreshDirectory()
+        }
+        
+        //get from directory
+        if let image = Cachy.getCachyImage(link: link) {
+            guard self.properties.urlToSet == link else {
+                return
+            }
+            self.image = image
+            handler?(true)
+            indicator.removeFromSuperview()
+            return
+        }
+        
         //queue
         let serialQueue = DispatchQueue(label: "cachyQueue")
         serialQueue.async {
-            if Cachy.getFirstTime() {
-                Cachy.refreshDirectory()
-            }
-            
-            if let image = Cachy.getCachyImage(link: link) {
-                DispatchQueue.main.async() { () -> Void in
+            self.image = placeholder ?? self.image
+            Cachy.downloadedFrom(link: link, completion: { (success, image) in
+                if success {
                     guard self.properties.urlToSet == link else {
                         return
                     }
-                    self.image = image
-                    handler?(true)
-                    indicator.removeFromSuperview()
-                }
-            } else {
-                Cachy.downloadedFrom(link: link, completion: { (success, image) in
-                    if success {
-                        guard self.properties.urlToSet == link else {
-                            return
-                        }
-                        Cachy.saveImage(image: image!, name: link)
-                        DispatchQueue.main.async() { () -> Void in
-                            self.image = image
-                            handler?(true)
-                            indicator.removeFromSuperview()
-                        }
-                        return
-                    }
+                    Cachy.saveImage(image: image!, name: link)
                     DispatchQueue.main.async() { () -> Void in
-                        self.image = placeholder
-                        handler?(false)
+                        self.image = image
+                        handler?(true)
                         indicator.removeFromSuperview()
                     }
-                })
-            }
+                    return
+                }
+                DispatchQueue.main.async() { () -> Void in
+                    self.image = placeholder
+                    handler?(false)
+                    indicator.removeFromSuperview()
+                }
+            })
         }
     }
 }
