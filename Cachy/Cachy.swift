@@ -49,12 +49,15 @@ public class Cachy {
     internal static func getCachyImage(link: String) -> UIImage? {
         let myLink = link.replacingOccurrences(of: "/", with: "--").replacingOccurrences(of: "_", with: "--").addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!
         
+        if let cachedImage = checkCache(link: myLink) {
+            return cachedImage
+        }
+        
         guard let elem = cachyImageDataArray.filter({$0.imageName == myLink}).first else {
             return nil
         }
-        let cachedImage = checkCache(link: myLink)
         
-        return (cachedImage != nil) ? cachedImage : getImageFromDirectory(data: elem)
+        return getImageFromDirectory(data: elem)
     }
     
     //save cachy image

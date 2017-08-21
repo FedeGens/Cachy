@@ -56,8 +56,8 @@ extension UIImageView {
     
     //Cachy extension
     public func cachyImageFrom(link: String, withPlaceholder placeholder: UIImage? = nil, indicatorVisible: Bool = true, withHandler handler: ((_ success: Bool) -> ())? = nil) {
-        var indicator : UIActivityIndicatorView! = nil
         
+        var indicator : UIActivityIndicatorView! = nil
         DispatchQueue.main.async {
             indicator = UIActivityIndicatorView()
         }
