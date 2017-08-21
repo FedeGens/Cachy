@@ -122,4 +122,70 @@ extension UIImageView {
             })
         }
     }
+    
+    public func cachyOldImageFrom(link: String, withPlaceholder placeholder: UIImage? = nil, indicatorVisible: Bool = true, withHandler handler: ((_ success: Bool) -> ())? = nil) {
+        
+        var indicator : UIActivityIndicatorView! = nil
+        DispatchQueue.main.async {
+            indicator = UIActivityIndicatorView()
+        }
+        
+        if Cachy.getFirstTime() {
+            Cachy.refreshDirectory()
+        }
+        
+        self.properties.urlToSet = link
+        
+        //check valid image url
+        guard self.verifyUrl(urlString: link) else {
+            self.image = placeholder ?? self.image
+            return
+        }
+        
+        //get from directory
+        if let image = Cachy.getCachyImage(link: link) {
+            guard self.properties.urlToSet == link else {
+                return
+            }
+            self.image = image
+            handler?(true)
+            return
+        }
+        
+        //queue
+        let serialQueue = DispatchQueue(label: "cachyQueue")
+        serialQueue.async {
+            
+            //indicator
+            DispatchQueue.main.async() { () -> Void in
+                if indicatorVisible {
+                    indicator.center = CGPoint.init(x: self.frame.width/2, y: self.frame.height/2)
+                    indicator.activityIndicatorViewStyle = .whiteLarge
+                    indicator.startAnimating()
+                    self.addSubview(indicator)
+                }
+                self.image = placeholder ?? self.image
+            }
+            Cachy.downloadedFrom(link: link, completion: { (success, image) in
+                if success {
+                    guard self.properties.urlToSet == link else {
+                        return
+                    }
+                    Cachy.saveImage(image: image!, name: link)
+                    DispatchQueue.main.async() { () -> Void in
+                        self.image = image
+                        handler?(true)
+                        indicator.removeFromSuperview()
+                    }
+                    return
+                }
+                DispatchQueue.main.async() { () -> Void in
+                    self.image = placeholder
+                    handler?(false)
+                    indicator.removeFromSuperview()
+                }
+            })
+        }
+        
+    }
 }
