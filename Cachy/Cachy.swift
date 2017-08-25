@@ -307,7 +307,10 @@ public class Cachy {
     
     //download image from string
     internal static func downloadedFrom(link: String, completion: @escaping (_ success: Bool, _ image: UIImage?) -> () ) {
-        guard let url = URL(string: link) else { return }
+        guard let url = URL(string: link) else {
+            completion(false, nil)
+            return
+        }
         downloadedFrom(url: url, completion: {
             (success, image) in
             if success {
