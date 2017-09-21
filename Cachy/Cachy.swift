@@ -306,7 +306,7 @@ public class Cachy {
     }
     
     //download image from string
-    internal static func downloadedFrom(link: String, squared: Bool = false, completion: @escaping (_ success: Bool, _ image: UIImage?) -> () ) {
+    internal static func downloadedFrom(link: String, completion: @escaping (_ success: Bool, _ image: UIImage?) -> () ) {
         guard let url = URL(string: link) else {
             completion(false, nil)
             return
@@ -314,13 +314,6 @@ public class Cachy {
         downloadedFrom(url: url, completion: {
             (success, image) in
             if success {
-                
-                //cropping image if required
-                if squared {
-                    completion(true, image!.squared)
-                    return
-                }
-                
                 completion(true, image)
             } else {
                 completion(false, nil)
@@ -330,7 +323,7 @@ public class Cachy {
     
     
     //MARK: Get UIImage
-    public static func cachyImageFrom(link: String, squared: Bool = false, withHandler handler: @escaping (_ success: Bool, _ image: UIImage?) -> ()) {
+    public static func cachyImageFrom(link: String, withHandler handler: @escaping (_ success: Bool, _ image: UIImage?) -> ()) {
         let serialQueue = DispatchQueue(label: "cachyGetUIImageQueue")
         serialQueue.async {
             if self.getFirstTime() {

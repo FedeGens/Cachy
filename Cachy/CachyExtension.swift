@@ -35,21 +35,6 @@ private func associateObject<ValueType: AnyObject>(
                              .OBJC_ASSOCIATION_RETAIN)
 }
 
-extension UIImage {
-    var isPortrait: Bool { return size.height > size.width }
-    var isLandscape: Bool { return size.width > size.height }
-    var breadth: CGFloat { return min(size.width, size.height) }
-    var breadthSize: CGSize { return CGSize(width: breadth, height: breadth) }
-    var breadthRect: CGRect { return CGRect(origin: .zero, size: breadthSize) }
-    var squared: UIImage? {
-        UIGraphicsBeginImageContextWithOptions(breadthSize, false, scale)
-        defer { UIGraphicsEndImageContext() }
-        guard let cgImage = cgImage?.cropping(to: CGRect(origin: CGPoint(x: isLandscape ? floor((size.width - size.height) / 2) : 0, y: isPortrait ? floor((size.height - size.width) / 2) : 0), size: breadthSize)) else { return nil }
-        UIImage(cgImage: cgImage).draw(in: breadthRect)
-        return UIGraphicsGetImageFromCurrentImageContext()
-    }
-}
-
 extension UIImageView {
     
     //cachy property to handle correct url image to assign
@@ -63,14 +48,14 @@ extension UIImageView {
     
     //func to validate url
     private func verifyUrl (urlString: String) -> Bool {
-        if let url = URL(string: urlString) {
-            return UIApplication.shared.canOpenURL(url)
+        if let _ = URL(string: urlString) {
+            return true
         }
         return false
     }
     
     //Cachy extension
-    public func cachyImageFrom(link: String, withPlaceholder placeholder: UIImage? = nil, indicatorVisible: Bool = true, squared: Bool = false, withHandler handler: ((_ success: Bool) -> ())? = nil) {
+    public func cachyImageFrom(link: String, withPlaceholder placeholder: UIImage? = nil, indicatorVisible: Bool = true, withHandler handler: ((_ success: Bool) -> ())? = nil) {
         
         var indicator : UIActivityIndicatorView! = nil
         DispatchQueue.main.async {
@@ -116,7 +101,7 @@ extension UIImageView {
                 }
                 self.image = placeholder ?? self.image
             }
-            Cachy.downloadedFrom(link: link, squared: squared, completion: { (success, image) in
+            Cachy.downloadedFrom(link: link, completion: { (success, image) in
                 if success {
                     guard self.properties.urlToSet == link else {
                         return
@@ -138,7 +123,7 @@ extension UIImageView {
         }
     }
     
-    public func cachyOldImageFrom(link: String, withPlaceholder placeholder: UIImage? = nil, indicatorVisible: Bool = true, squared: Bool = false, withHandler handler: ((_ success: Bool) -> ())? = nil) {
+    public func cachyOldImageFrom(link: String, withPlaceholder placeholder: UIImage? = nil, indicatorVisible: Bool = true, withHandler handler: ((_ success: Bool) -> ())? = nil) {
         
         var indicator : UIActivityIndicatorView! = nil
         DispatchQueue.main.async {
@@ -181,7 +166,7 @@ extension UIImageView {
                 }
                 self.image = placeholder ?? self.image
             }
-            Cachy.downloadedFrom(link: link, squared: squared, completion: { (success, image) in
+            Cachy.downloadedFrom(link: link, completion: { (success, image) in
                 if success {
                     guard self.properties.urlToSet == link else {
                         return
@@ -204,3 +189,4 @@ extension UIImageView {
         
     }
 }
+
