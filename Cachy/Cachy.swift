@@ -47,7 +47,7 @@ public class Cachy {
     
     //check if image exists
     internal static func getCachyImage(link: String) -> UIImage? {
-        let myLink = link.replacingOccurrences(of: "/", with: "--").replacingOccurrences(of: "_", with: "--").addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!
+        let myLink = link.replacingOccurrences(of: "/", with: "--").replacingOccurrences(of: "_", with: "--")
         
         if let cachedImage = checkCache(link: myLink) {
             return cachedImage
