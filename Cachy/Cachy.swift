@@ -104,9 +104,11 @@ public class Cachy {
     //get image from directory and update timestamp
     private static func getImageFromDirectory(data: CachyImageData) -> UIImage? {
         if Int(CFAbsoluteTimeGetCurrent()) - Int(data.timestamp)! < 10 {
-            let image = UIImage(contentsOfFile: getCachyDirectory().appendingPathComponent(data.getFilename()).path)!
-            self.imageCache.setObject(image, forKey: data.imageName as NSString)
-            return image
+            if let image = UIImage(contentsOfFile: getCachyDirectory().appendingPathComponent(data.getFilename()).path) {
+                self.imageCache.setObject(image, forKey: data.imageName as NSString)
+                return image
+            }
+            return nil
         }
         do {
             let path = getCachyDirectory()
