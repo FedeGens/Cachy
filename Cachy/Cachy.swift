@@ -104,11 +104,9 @@ public class Cachy {
     //get image from directory and update timestamp
     private static func getImageFromDirectory(data: CachyImageData) -> UIImage? {
         if Int(CFAbsoluteTimeGetCurrent()) - Int(data.timestamp)! < 10 {
-            if let image = UIImage(contentsOfFile: getCachyDirectory().appendingPathComponent(data.getFilename()).path) {
-                self.imageCache.setObject(image, forKey: data.imageName as NSString)
-                return image
-            }
-            return nil
+            let image = UIImage(contentsOfFile: getCachyDirectory().appendingPathComponent(data.getFilename()).path)!
+            self.imageCache.setObject(image, forKey: data.imageName as NSString)
+            return image
         }
         do {
             let path = getCachyDirectory()
@@ -292,19 +290,16 @@ public class Cachy {
     //MARK: Download images
     //download image from url
     internal static func downloadedFrom(url: URL, completion: @escaping (_ success: Bool, _ image: UIImage?) -> () ) {
-        URLSession.shared.dataTask(with: url) { (data, response, error) in
-            guard
-                let httpURLResponse = response as? HTTPURLResponse, httpURLResponse.statusCode == 200,
-                let mimeType = response?.mimeType, mimeType.hasPrefix("image"),
-                let data = data, error == nil,
-                let image = UIImage(data: data)
-                else {
-                    completion(false, nil)
-                    return
+        do {
+            let data = try Data(contentsOf: url)
+            if let image = UIImage(data: data) {
+                completion (true, image)
+            } else {
+                completion (false, nil)
             }
-            completion(true, image)
-            
-            }.resume()
+        } catch {
+            completion (false, nil)
+        }
     }
     
     //download image from string

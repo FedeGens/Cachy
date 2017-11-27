@@ -104,6 +104,9 @@ extension UIImageView {
             Cachy.downloadedFrom(link: link, completion: { (success, image) in
                 if success {
                     guard self.properties.urlToSet == link else {
+                        DispatchQueue.main.async() { () -> Void in
+                            indicator.removeFromSuperview()
+                        }
                         return
                     }
                     Cachy.saveImage(image: image!, name: link)
@@ -161,6 +164,7 @@ extension UIImageView {
                 if indicatorVisible {
                     indicator.center = CGPoint.init(x: self.frame.width/2, y: self.frame.height/2)
                     indicator.activityIndicatorViewStyle = .whiteLarge
+                    indicator.hidesWhenStopped = true
                     indicator.startAnimating()
                     self.addSubview(indicator)
                 }
@@ -169,12 +173,17 @@ extension UIImageView {
             Cachy.downloadedFrom(link: link, completion: { (success, image) in
                 if success {
                     guard self.properties.urlToSet == link else {
+                        DispatchQueue.main.async() { () -> Void in
+                            indicator.stopAnimating()
+                            indicator.removeFromSuperview()
+                        }
                         return
                     }
                     Cachy.saveImage(image: image!, name: link)
                     DispatchQueue.main.async() { () -> Void in
                         self.image = image
                         handler?(true)
+                        indicator.stopAnimating()
                         indicator.removeFromSuperview()
                     }
                     return
@@ -182,6 +191,7 @@ extension UIImageView {
                 DispatchQueue.main.async() { () -> Void in
                     self.image = placeholder
                     handler?(false)
+                    indicator.stopAnimating()
                     indicator.removeFromSuperview()
                 }
             })
