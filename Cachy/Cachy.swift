@@ -103,8 +103,14 @@ public class Cachy {
     
     //get image from directory and update timestamp
     private static func getImageFromDirectory(data: CachyImageData) -> UIImage? {
-        if Int(CFAbsoluteTimeGetCurrent()) - Int(data.timestamp)! < 10 {
-            let image = UIImage(contentsOfFile: getCachyDirectory().appendingPathComponent(data.getFilename()).path)!
+        let intAbsTime = Int(CFAbsoluteTimeGetCurrent())
+        guard let intTimestamp = Int(data.timestamp) else {
+            return nil
+        }
+        if intAbsTime - intTimestamp < 10 {
+            guard let image = UIImage(contentsOfFile: getCachyDirectory().appendingPathComponent(data.getFilename()).path) else {
+                return nil
+            }
             self.imageCache.setObject(image, forKey: data.imageName as NSString)
             return image
         }
@@ -117,7 +123,9 @@ public class Cachy {
             
             try FileManager.default.moveItem(at: originPath, to: destinationPath)
             //update timestamp
-            let index = cachyImageDataArray.index(where: {$0.imageName == data.imageName})!
+            guard let index = cachyImageDataArray.index(where: {$0.imageName == data.imageName}) else {
+                return nil
+            }
             cachyImageDataArray[index].timestamp = timestamp
             if let image = UIImage(contentsOfFile: getCachyDirectory().appendingPathComponent(cachyImageDataArray[index].getFilename()).path) {
                 self.imageCache.setObject(image, forKey: data.imageName as NSString)
@@ -136,7 +144,7 @@ public class Cachy {
         do {
             let urls = try FileManager.default.contentsOfDirectory(at: getCachyDirectory(), includingPropertiesForKeys: nil, options: [])
             if let imageUrl = urls.filter({$0.absoluteString.contains(name)}).first {
-                return UIImage(contentsOfFile: imageUrl.path)!
+                return UIImage(contentsOfFile: imageUrl.path) ?? UIImage()
             }
         } catch {
             //print(error)
@@ -184,7 +192,7 @@ public class Cachy {
         let timestamp = String(Int(CFAbsoluteTimeGetCurrent()))
         let filename = kCachyFilePrefix + "_" + timestamp + "_" + myName
         
-        return (timestamp, myName, filename.removingPercentEncoding!)
+        return (timestamp, myName, filename.removingPercentEncoding ?? "")
     }
     
     private static func saveImageToDirectory(image: UIImage, name: String) {
@@ -232,7 +240,9 @@ public class Cachy {
         do {
             try fileManager.removeItem(at: filePath)
             
-            let index = cachyImageDataArray.index(where: {$0.imageName == data.imageName})!
+            guard let index = cachyImageDataArray.index(where: {$0.imageName == data.imageName}) else {
+                return
+            }
             cachyImageDataArray.remove(at: index)
         } catch _ as NSError {
             //print(error.debugDescription)
@@ -280,11 +290,15 @@ public class Cachy {
         
         func getFilename() -> String {
             let encodedFilename = kCachyFilePrefix + "_" + String(timestamp) + "_" + imageName
-            return encodedFilename.removingPercentEncoding!
+            return encodedFilename.removingPercentEncoding ?? ""
         }
         
         func isTimestampValid() -> Bool {
-            return (Int(CFAbsoluteTimeGetCurrent()) - Int(timestamp)!) < kMaxTime
+            let intAbsTime = Int(CFAbsoluteTimeGetCurrent())
+            guard let intTimestamp = Int(timestamp) else {
+                return false
+            }
+            return (intAbsTime - intTimestamp) < kMaxTime
         }
     }
     
@@ -335,14 +349,15 @@ public class Cachy {
                 }
             } else {
                 self.downloadedFrom(link: link, completion: { (success, image) in
-                    if success {
-                        self.saveImage(image: image!, name: link)
+                    guard success, let image = image else {
                         DispatchQueue.main.async {
-                            handler(true, image)
+                            handler(false, nil)
                         }
+                        return
                     }
+                    self.saveImage(image: image, name: link)
                     DispatchQueue.main.async {
-                        handler(false, nil)
+                        handler(true, image)
                     }
                 })
             }
