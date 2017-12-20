@@ -197,7 +197,7 @@ public class Cachy {
                     addElemToCachyArray(timestamp: timestamp, name: myName)
                     checkCachySize()
                 } catch {
-                    //print("error")
+                    print("_CACHY: - SAVING IMAGE WARNING: ", error)
                 }
             }
         }
@@ -211,7 +211,9 @@ public class Cachy {
     }
     
     private static func addElemToCachyArray(timestamp: String, name: String) {
-        cachyImageDataArray.append(CachyImageData.createCachyImageData(timestamp: timestamp, imageName: name))
+        DispatchQueue.main.async {
+            cachyImageDataArray.append(CachyImageData.createCachyImageData(timestamp: timestamp, imageName: name))
+        }
     }
     
     //check size
