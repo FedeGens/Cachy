@@ -44,6 +44,15 @@ public class Cachy {
         checkCachyImageTimestamp()
     }
     
+    //remove an image from cache
+    public static func purge(url: String) {
+        let (_, name, _) = createFilename(name: url)
+        guard let data = (cachyImageDataArray.filter({$0.imageName == name}).first) else {
+            return
+        }
+        imageCache.removeObject(forKey: name as NSString)
+        removeElem(data: data)
+    }
     
     //check if image exists
     internal static func getCachyImage(link: String) -> UIImage? {
